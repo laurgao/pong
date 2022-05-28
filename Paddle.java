@@ -1,5 +1,3 @@
-package pong;
-
 /* Paddle class defines behaviours for both the computer- and player-controlled paddles.  
 
 child of Rectangle because that makes it easy to draw and check for collision

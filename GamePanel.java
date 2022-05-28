@@ -1,5 +1,3 @@
-package pong;
-
 /* GamePanel class acts as the main "game loop" - continuously runs the game and calls whatever needs to be called
 
 Child of JPanel because JPanel contains methods for drawing to the screen
@@ -55,10 +53,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 screen.mousePressed(e, () -> {
+                    sleep();
                     mode = "normal";
                     playerScore = 0;
                     computerScore = 0;
                 }, () -> {
+                    sleep();
                     mode = "challenge";
                     startTime = System.currentTimeMillis();
                 });
@@ -114,9 +114,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         computerPaddle.draw(g);
         screen.draw(g); // draw the screen last so it is on top of everything else
         drawScore(g);
+        drawInstructions(g);
     }
 
-    public void drawScore(Graphics g) {
+    private void drawScore(Graphics g) {
         if (screen.isInstructions || (screen.isVisible && mode == "challenge"))
             return; // Do not display score if is instructions or if we're on the challenge mode
                     // winning screen.
@@ -158,7 +159,25 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     }
 
-    public String getElapsedTime() {
+    // Add instructions to use up and down arrow keys
+    private void drawInstructions(Graphics g) {
+        // Display iff screen is showing challenge instructions or if on first sleep
+        // when the game starts.
+        if (screen.isInstructions
+                || isSleeping && (playerScore == 0 && computerScore == 0 || getElapsedTime() == "0:00")) {
+            final int marginBottom = 20; // distance from the bottom of screen
+            g.setColor(screen.isVisible ? CustomColors.emerald600 : CustomColors.emerald400);
+            Font paragraphFont = new Font("Arial", Font.PLAIN, 14);
+            g.setFont(paragraphFont);
+            FontMetrics paragraphMetrics = g.getFontMetrics(paragraphFont); // button 2 text metrics
+            int instructionsY = GamePanel.H - marginBottom - paragraphMetrics.getHeight();
+            String instructionsText = "Use up and down arrow keys to control your paddle.";
+            int instructionsX = GamePanel.W / 2 - paragraphMetrics.stringWidth(instructionsText) / 2;
+            g.drawString(instructionsText, instructionsX, instructionsY);
+        }
+    }
+
+    private String getElapsedTime() {
         long elapsedMs = System.currentTimeMillis() - startTime; // time elapsed in milliseconds
         long elapsedS = elapsedMs / 1000; // time elapsed in seconds
         long elapsedMins = elapsedS / 60; // time elapsed in minutes
@@ -170,14 +189,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         return elapsedTime;
     }
 
-    // call the move methods in other classes to update positions
-    // this method is constantly called from run(). By doing this, movements appear
-    // fluid and natural. If we take this out the movements appear sluggish and
-    // laggy
-    public void move() {
-        ball.move();
-        playerPaddle.move();
-        computerPaddle.move();
+    private void updateComputerPaddleVelocity() {
+        // This method controlls the "algorithm" for the computer-controlled paddle.
         // move the computer paddle towards the ball if ball is moving towards the
         // computer paddle and the ball is on the right side of the screen.
         if (Math.cos(ball.theta) > 0 && ball.x > W / 2) {
@@ -185,14 +198,14 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
             final int error = mode == "normal" ? 20 : 0; // the ball will be this many pixels away from the paddle
                                                          // before it changes direction
-            // this is so the algorithm will sometimes miss the ball, which gives the
-            // player a chance of winning.
+            // if greater than 0, the algorithm will sometimes miss the ball, which gives
+            // the player a chance of winning.
 
             int paddleCy = (computerPaddle.y + Paddle.H / 2); // center y coordinate of paddle
             int ballCy = (ball.y + PongBall.D / 2); // center y coordinate of ball
             if (Math.abs(paddleCy - ballCy) > (Paddle.H / 2 + error)) {
+                // If paddle is above ball, move paddle down, and vice versa.
                 if (paddleCy < ballCy) {
-                    // If paddle is above ball, move paddle down
                     computerPaddle.setYVelocity(computerPaddle.SPEED);
                 } else if (computerPaddle.y > ball.y) {
                     computerPaddle.setYVelocity(-computerPaddle.SPEED);
@@ -203,28 +216,40 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             computerPaddle.setYVelocity(0);
         }
 
-        // Check for collision and update theta accordingly.
+    }
 
+    // Check for collision and update theta accordingly.
+    private void checkCollision() {
+        final double randomIncrement = 0.2; // add a little bit of randomness to the angle each time ball bounces.
         // Does ball hit paddle?
         if ((ball.x + PongBall.D) >= playerPaddle.x
                 && ball.x <= playerPaddle.x + Paddle.W
                 && ball.y + PongBall.D >= playerPaddle.y && ball.y <= playerPaddle.y + Paddle.H) {
-            ball.theta = Math.PI - ball.theta;
-            ball.theta += Math.random() * 0.1 - 0.05; // add a little bit of randomness to the angle each time ball
-                                                      // bounces.
+
+            // reflect theta if ball is currently moving left
+            if (Math.cos(ball.theta) < 0) {
+                ball.theta = Math.PI - ball.theta;
+                ball.theta += Math.random() * randomIncrement * 2 - randomIncrement;
+            }
         }
         // Does hall hit computer paddle?
         else if (ball.x + PongBall.D >= computerPaddle.x
                 && ball.x <= computerPaddle.x + Paddle.W
                 && ball.y + PongBall.D >= computerPaddle.y
                 && ball.y <= computerPaddle.y + Paddle.H) {
-            ball.theta = Math.PI - ball.theta;
-            ball.theta += Math.random() * 0.1 - 0.05;
-        } else if (ball.y <= 0 || ball.y >= GamePanel.H - PongBall.D) {
-            // If ball hits top or bottom of screen
+            // reflect theta if ball is currently moving right
+            if (Math.cos(ball.theta) > 0) {
+                ball.theta = Math.PI - ball.theta;
+                ball.theta += Math.random() * randomIncrement * 2 - randomIncrement;
+
+            }
+        } else if (ball.y <= 0 && Math.sin(ball.theta) < 0
+                || ball.y >= GamePanel.H - PongBall.D && Math.sin(ball.theta) > 0) {
+            // If ball hits top of screen while moving up or bottom while moving down,
             // do a bounce
             ball.theta *= -1;
-            ball.theta += Math.random() * 0.1 - 0.05;
+            ball.theta += Math.random() * randomIncrement * 2 - randomIncrement;
+
         } else if (ball.x <= 0) {
             // If ball hits left or right of screen (and not paddle), the game loses.
             // computer wins
@@ -244,7 +269,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 // set text to display the home screen if the home screen isn't already being
                 // displayed.
                 if (!screen.isVisible) {
-                    screen.setText("You survived for " + getElapsedTime() + "!", "Normal mode");
+                    screen.setText("You survived for " + getElapsedTime() + "!", "Normal mode", "Play again?");
                     ball.reset();
                 }
             }
@@ -258,7 +283,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 ball.start();
             }
         }
+    }
 
+    private void adjustTheta() {
         // Normalize theta to be between -pi and pi
         if (ball.theta > Math.PI) {
             ball.theta -= 2 * Math.PI;
@@ -272,18 +299,29 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         // farther away from pi/2 and -pi/2.
         double threshold = 0.5;
         if (Math.abs(ball.theta - Math.PI / 2) < threshold) {
-            System.out.println("too close to pi/2");
             if (ball.theta < Math.PI / 2)
                 ball.theta = Math.PI / 2 - threshold - 0.1;
             else
                 ball.theta = Math.PI / 2 + threshold + 0.1;
         } else if (Math.abs(ball.theta + Math.PI / 2) < threshold) {
-            System.out.println("too close to -pi/2");
             if (ball.theta < -Math.PI / 2)
                 ball.theta = -Math.PI / 2 - threshold - 0.1;
             else
                 ball.theta = -Math.PI / 2 + threshold + 0.1;
         }
+    }
+
+    // call the move methods in other classes to update positions
+    // this method is constantly called from run(). By doing this, movements appear
+    // fluid and natural. If we take this out the movements appear sluggish and
+    // laggy
+    public void move() {
+        ball.move();
+        playerPaddle.move();
+        computerPaddle.move();
+        updateComputerPaddleVelocity();
+        checkCollision();
+        adjustTheta();
     }
 
     public void sleep() {
@@ -318,12 +356,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             } else {
                 if (timeWhenSleepingStarted == 0) {
                     timeWhenSleepingStarted = System.nanoTime();
-                } else {
-                    if (System.nanoTime() - timeWhenSleepingStarted > 1000000000) {
-                        delta = 0;
-                        isSleeping = false;
-                        timeWhenSleepingStarted = 0;
-                    }
+                } else if (System.nanoTime() - timeWhenSleepingStarted > 1000000000) {
+                    delta = 0; // Reset delta so playback resumes as if the sleeping never happened.
+                    isSleeping = false;
+                    timeWhenSleepingStarted = 0;
                 }
             }
         }

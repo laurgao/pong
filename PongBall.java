@@ -1,5 +1,3 @@
-package pong;
-
 /* PongBall class defines behaviours for the pong ball  
 
 child of Rectangle because that makes it easy to draw and check for collision

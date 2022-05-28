@@ -1,5 +1,3 @@
-package pong;
-
 // ChallengeInstructions class displays the instructions for the challenge mode
 
 import java.awt.*;
@@ -44,7 +42,8 @@ public class ChallengeInstructions {
         FontMetrics metrics = g.getFontMetrics(paragraphFont);
         g.setFont(paragraphFont);
         final int paragraphMargin = 20; // distance between paragraphs
-        int y = drawStringWrap(g, "In challenge mode, you play against a perfect algorithm that will never lose.",
+        int y = drawStringWrap(g,
+                "In challenge mode, you play against an almost-perfect algorithm that will almost never lose.",
                 metrics, 50);
         y = drawStringWrap(g, "The game ends as soon as you lose once.", metrics, y + paragraphMargin);
         y = drawStringWrap(g, "The goal is to last for as much time as you can last without losing.", metrics,

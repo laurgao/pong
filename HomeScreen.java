@@ -1,5 +1,3 @@
-package pong;
-
 /* HomeScreen class functions like a main menu.
 It displays big text like a title screen as well as a button to start the game.
 */
@@ -12,9 +10,10 @@ public class HomeScreen {
 
     public boolean isVisible;
     public boolean isInstructions;
-    private String text;
+    private String title;
     private PongBall ball;
     private String buttonText;
+    private String subtitle;
 
     private int buttonY;
     private BiPredicate<Integer, Integer> b2IsPressed;
@@ -24,15 +23,22 @@ public class HomeScreen {
     public HomeScreen(String text, PongBall ball, String buttonText) {
         isVisible = true;
         isInstructions = false;
-        this.text = text;
+        this.title = text;
         this.ball = ball;
         this.buttonText = buttonText;
+        subtitle = "";
+    }
+
+    public void setText(String titleText, String buttonText, String subtitle) {
+        this.title = titleText;
+        this.buttonText = buttonText;
+        this.subtitle = subtitle;
+        isVisible = true;
     }
 
     public void setText(String titleText, String buttonText) {
-        this.text = titleText;
-        this.buttonText = buttonText;
-        isVisible = true;
+        // Overload variant of `setText` that makes subtitle empty.
+        setText(titleText, buttonText, "");
     }
 
     public void hide() {
@@ -51,7 +57,14 @@ public class HomeScreen {
                 g.setColor(bgColor);
                 g.fillRect(0, 0, GamePanel.W, GamePanel.H);
                 g.setColor(CustomColors.emerald400);
-                int numChars = text.length();
+
+                // Draw title
+                boolean subtitleExists = subtitle.length() > 0;
+                Font subtitleFont = new Font("TimesRoman", Font.ITALIC, 16);
+                FontMetrics subMetrics = g.getFontMetrics(subtitleFont);
+                int subtitleHeight = subtitleExists ? subMetrics.getHeight() : 0;
+
+                int numChars = title.length();
                 int anticipatedTitleWidth = GamePanel.W / 2;
                 int widthPerChar = anticipatedTitleWidth / numChars;
                 // Get the FontMetrics so we can determine the width of the text so we can
@@ -59,16 +72,28 @@ public class HomeScreen {
                 Font titleFont = new Font("TimesRoman", Font.PLAIN, (widthPerChar + 20));
                 g.setFont(titleFont);
                 FontMetrics titleMetrics = g.getFontMetrics(titleFont);
-                int titleWidth = titleMetrics.stringWidth(text);
+                int titleWidth = titleMetrics.stringWidth(title);
 
-                int titleY = GamePanel.H / 2 - widthPerChar / 2;
-                g.drawString(text, GamePanel.W / 2 - titleWidth / 2, titleY);
+                int titleY = GamePanel.H / 2 - titleMetrics.getHeight() / 2;
+                if (subtitleExists)
+                    titleY -= (subtitleHeight + titleMetrics.getHeight() / 2);
+                g.drawString(title, GamePanel.W / 2 - titleWidth / 2, titleY);
+
+                // Draw subtitle
+                int subtitleY = GamePanel.H / 2;
+                if (subtitleExists) {
+                    g.setFont(subtitleFont);
+                    g.setColor(CustomColors.emerald500);
+                    int subtitleX = GamePanel.W / 2 - subMetrics.stringWidth(subtitle) / 2;
+                    g.drawString(subtitle, subtitleX, subtitleY);
+                }
 
                 // pseudobutton
-                g.setColor(CustomColors.emerald600);
                 int buttonHeight = 50;
-                int marginTop = 25; // margin between title and button
-                buttonY = titleY + titleMetrics.getHeight() + marginTop;
+                int marginTop = 20; // margin between title and button
+                int marginTopSubtitle = 10; // margin between subtitle and button
+                buttonY = subtitleExists ? subtitleY + subMetrics.getHeight() + marginTopSubtitle
+                        : titleY + titleMetrics.getHeight() + marginTop;
 
                 g.setColor(CustomColors.emerald300);
                 int buttonFontSize = 16;
@@ -115,17 +140,17 @@ public class HomeScreen {
             if (isInstructions) {
                 if (instructions.isClicked(e.getX(), e.getY())) {
                     // Start challenge mode.
+                    hide();
                     startChallenge.run();
                     ball.start();
-                    hide();
                 }
             } else {
                 // check if the mouse is in the button when pressed
                 if (e.getX() > GamePanel.W / 2 - 50 && e.getX() < GamePanel.W / 2 + 50
                         && e.getY() > buttonY && e.getY() < buttonY + 50) {
+                    hide();
                     startNormalMode.run();
                     ball.start();
-                    hide();
                 }
                 if (b2IsPressed.test(e.getX(), e.getY())) {
                     // Open instructions screen
