@@ -21,16 +21,14 @@ public class Paddle extends Rectangle {
 
     // called from GamePanel when any keyboard input is detected
     // updates the direction of the ball based on user input
-    // if the keyboard input isn't any of the options (d, a, w, s), then nothing
-    // happens
     public void keyPressed(KeyEvent e) {
 
-        if (e.getKeyChar() == 'w') {
+        if (e.getKeyCode() == KeyEvent.VK_UP) {
             setYVelocity(SPEED * -1);
             move();
         }
 
-        if (e.getKeyChar() == 's') {
+        if (e.getKeyCode() == KeyEvent.VK_DOWN) {
             setYVelocity(SPEED);
             move();
         }
@@ -40,12 +38,12 @@ public class Paddle extends Rectangle {
     // Makes the ball stop moving in that direction
     public void keyReleased(KeyEvent e) {
 
-        if (e.getKeyChar() == 'w') {
+        if (e.getKeyCode() == KeyEvent.VK_UP) {
             setYVelocity(0);
             move();
         }
 
-        if (e.getKeyChar() == 's') {
+        if (e.getKeyCode() == KeyEvent.VK_DOWN) {
             setYVelocity(0);
             move();
         }

@@ -31,6 +31,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     int computerScore;
     HomeScreen screen;
 
+    String mode = "normal"; // "normal" or "challenge"
+    long startTime; // time at which the game started (for calculating time elapsed for challenge
+                    // mode)
+
     boolean isSleeping;
 
     public GamePanel() {
@@ -51,8 +55,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 screen.mousePressed(e, () -> {
+                    mode = "normal";
                     playerScore = 0;
                     computerScore = 0;
+                }, () -> {
+                    mode = "challenge";
+                    startTime = System.currentTimeMillis();
                 });
             }
         });
@@ -109,6 +117,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
 
     public void drawScore(Graphics g) {
+        if (screen.isInstructions || (screen.isVisible && mode == "challenge"))
+            return; // Do not display score if is instructions or if we're on the challenge mode
+                    // winning screen.
         if (screen.isVisible)
             g.setColor(CustomColors.emerald900);
         else
@@ -117,22 +128,46 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         int scoreFontSize = 50;
         Font scoreFont = new Font("Arial", Font.ITALIC, scoreFontSize);
         g.setFont(scoreFont);
-
-        // Do some math to center the scores in their respective halves of the screen
         FontMetrics metrics = g.getFontMetrics(scoreFont);
         int marginTop = 80; // distance from top of window
-        String pT = Integer.toString(playerScore); // player score text
-        int pW = metrics.stringWidth(pT); // player score text width
-        int pCx = W / 4; // player score text center x
-        int pX = pCx - pW / 2; // player score text left corner x coordinate
 
-        String cT = Integer.toString(computerScore); // computer score text
-        int cW = metrics.stringWidth(cT); // computer score text width
-        int cCx = 3 * W / 4; // computer score text center x
-        int cX = cCx - cW / 2; // computer score text left corner x coordinate
+        if (mode == "normal") {
+            // Display the player's and computer's scores up to 5
+            // This score represents how many times the opposing player has missed the ball.
 
-        g.drawString(pT, pX, marginTop);
-        g.drawString(cT, cX, marginTop);
+            // Do some math to center the scores in their respective halves of the screen
+            String pT = Integer.toString(playerScore); // player score text
+            int pW = metrics.stringWidth(pT); // player score text width
+            int pCx = W / 4; // player score text center x
+            int pX = pCx - pW / 2; // player score text left corner x coordinate
+
+            String cT = Integer.toString(computerScore); // computer score text
+            int cW = metrics.stringWidth(cT); // computer score text width
+            int cCx = 3 * W / 4; // computer score text center x
+            int cX = cCx - cW / 2; // computer score text left corner x coordinate
+
+            g.drawString(pT, pX, marginTop);
+            g.drawString(cT, cX, marginTop);
+        } else {
+            // In challenge mode, display the time elapsed in minutes and seconds
+            String elapsedTime = getElapsedTime();
+            int textWidth = metrics.stringWidth(elapsedTime);
+            int textX = W / 2 - textWidth / 2;
+            g.drawString(elapsedTime, textX, marginTop);
+        }
+
+    }
+
+    public String getElapsedTime() {
+        long elapsedMs = System.currentTimeMillis() - startTime; // time elapsed in milliseconds
+        long elapsedS = elapsedMs / 1000; // time elapsed in seconds
+        long elapsedMins = elapsedS / 60; // time elapsed in minutes
+        long elapsedSecs = elapsedS % 60; // time elapsed in seconds minus full minutes
+
+        String secsString = elapsedSecs < 10 ? "0" + Long.toString(elapsedSecs) : Long.toString(elapsedSecs);
+        String elapsedTime = Long.toString(elapsedMins) + ":" + secsString;
+
+        return elapsedTime;
     }
 
     // call the move methods in other classes to update positions
@@ -144,12 +179,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         playerPaddle.move();
         computerPaddle.move();
         // move the computer paddle towards the ball if ball is moving towards the
-        // computer paddle.
-        if (Math.cos(ball.theta) > 0) {
+        // computer paddle and the ball is on the right side of the screen.
+        if (Math.cos(ball.theta) > 0 && ball.x > W / 2) {
             // Only change direction if ball is sufficiently far away from paddle.
 
-            final int error = 40; // the ball will be this many pixels away from the paddle before it changes
-                                  // direction
+            final int error = mode == "normal" ? 20 : 0; // the ball will be this many pixels away from the paddle
+                                                         // before it changes direction
             // this is so the algorithm will sometimes miss the ball, which gives the
             // player a chance of winning.
 
@@ -193,15 +228,25 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         } else if (ball.x <= 0) {
             // If ball hits left or right of screen (and not paddle), the game loses.
             // computer wins
-            computerScore++;
-            ball.reset();
-            if (computerScore >= WINNING_SCORE)
-                screen.setText("Computer wins!", "Play again?");
-            else {
-                // Wait 1 second with the ball in the middle of the screen before the ball
-                // starts moving.
-                sleep();
-                ball.start();
+            if (mode == "normal") {
+                computerScore++;
+                ball.reset();
+                if (computerScore >= WINNING_SCORE)
+                    screen.setText("Computer wins!", "Play again?");
+                else {
+                    // Wait 1 second with the ball in the middle of the screen before the ball
+                    // starts moving.
+                    sleep();
+                    ball.start();
+                }
+            } else {
+                // in challenge mode, the game ends as soon as the player loses once.
+                // set text to display the home screen if the home screen isn't already being
+                // displayed.
+                if (!screen.isVisible) {
+                    screen.setText("You survived for " + getElapsedTime() + "!", "Normal mode");
+                    ball.reset();
+                }
             }
         } else if (ball.x >= GamePanel.W - PongBall.D) {
             playerScore++;

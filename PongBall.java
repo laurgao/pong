@@ -27,7 +27,9 @@ public class PongBall extends Rectangle {
     // constructor creates ball at given location with given dimensions
     public PongBall(int x, int y) {
         super(x, y, D, D);
-        theta = Math.random() * 2 * Math.PI - Math.PI;
+        // Generate a random angle from pi/2 to 3pi/2 (so the ball always starts by
+        // going towards the player)
+        theta = Math.random() * Math.PI + Math.PI / 2;
         xDouble = (double) x;
         yDouble = (double) y;
         isMoving = false;
@@ -40,7 +42,7 @@ public class PongBall extends Rectangle {
         y = GamePanel.W / 2;
         xDouble = (double) x;
         yDouble = (double) y;
-        theta = Math.random() * 2 * Math.PI - Math.PI;
+        theta = Math.random() * Math.PI + Math.PI / 2;
     }
 
     public void start() {

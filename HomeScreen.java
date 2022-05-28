@@ -1,34 +1,42 @@
 package pong;
 
-/* Displays big text like a title screen as well as a button to start the game.
+/* HomeScreen class functions like a main menu.
+It displays big text like a title screen as well as a button to start the game.
 */
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
+import java.util.function.BiPredicate;
 
 public class HomeScreen {
 
-    boolean isVisible;
-    String text;
-    PongBall ball;
-    String buttonText;
-    int buttonY;
+    public boolean isVisible;
+    public boolean isInstructions;
+    private String text;
+    private PongBall ball;
+    private String buttonText;
+
+    private int buttonY;
+    private BiPredicate<Integer, Integer> b2IsPressed;
+    ChallengeInstructions instructions = new ChallengeInstructions();
 
     // constructor creates ball at given location with given dimensions
     public HomeScreen(String text, PongBall ball, String buttonText) {
         isVisible = true;
+        isInstructions = false;
         this.text = text;
         this.ball = ball;
         this.buttonText = buttonText;
     }
 
-    public void setText(String text, String buttonText) {
-        this.text = text;
+    public void setText(String titleText, String buttonText) {
+        this.text = titleText;
         this.buttonText = buttonText;
         isVisible = true;
     }
 
     public void hide() {
+        isInstructions = false;
         isVisible = false;
     }
 
@@ -36,50 +44,93 @@ public class HomeScreen {
     // draws the current location of the ball to the screen
     public void draw(Graphics g) {
         if (isVisible) {
-            final Color bgColor = Color.black;
-            g.setColor(bgColor);
-            g.fillRect(0, 0, GamePanel.W, GamePanel.H);
-            g.setColor(CustomColors.emerald400);
-            int numChars = text.length();
-            int anticipatedTitleWidth = GamePanel.W / 2;
-            int widthPerChar = anticipatedTitleWidth / numChars;
-            // Get the FontMetrics so we can determine the width of the text so we can
-            // center it on screen.
-            Font font = new Font("TimesRoman", Font.PLAIN, (widthPerChar + 15));
-            g.setFont(font);
-            FontMetrics metrics = g.getFontMetrics(font);
-            int textWidth = metrics.stringWidth(text);
+            if (isInstructions) {
+                instructions.draw(g);
+            } else {
+                final Color bgColor = Color.black;
+                g.setColor(bgColor);
+                g.fillRect(0, 0, GamePanel.W, GamePanel.H);
+                g.setColor(CustomColors.emerald400);
+                int numChars = text.length();
+                int anticipatedTitleWidth = GamePanel.W / 2;
+                int widthPerChar = anticipatedTitleWidth / numChars;
+                // Get the FontMetrics so we can determine the width of the text so we can
+                // center it on screen.
+                Font titleFont = new Font("TimesRoman", Font.PLAIN, (widthPerChar + 20));
+                g.setFont(titleFont);
+                FontMetrics titleMetrics = g.getFontMetrics(titleFont);
+                int titleWidth = titleMetrics.stringWidth(text);
 
-            g.drawString(text, GamePanel.W / 2 - textWidth / 2, GamePanel.H / 2 - widthPerChar / 2);
+                int titleY = GamePanel.H / 2 - widthPerChar / 2;
+                g.drawString(text, GamePanel.W / 2 - titleWidth / 2, titleY);
 
-            // pseudobutton
-            g.setColor(CustomColors.emerald600);
-            int buttonHeight = 50;
-            buttonY = GamePanel.H / 2 + widthPerChar / 2;
+                // pseudobutton
+                g.setColor(CustomColors.emerald600);
+                int buttonHeight = 50;
+                int marginTop = 25; // margin between title and button
+                buttonY = titleY + titleMetrics.getHeight() + marginTop;
 
-            Graphics2D graphics2 = (Graphics2D) g;
-            // g.fillRect(GamePanel.W / 2 - 50, buttonY, 100, buttonHeight);
-            int borderRadius = 10; // radius of rounded corners of the button
-            RoundRectangle2D roundedRectangle = new RoundRectangle2D.Float(GamePanel.W / 2 - 50, buttonY, 100,
-                    buttonHeight, borderRadius, borderRadius);
-            graphics2.draw(roundedRectangle);
+                g.setColor(CustomColors.emerald300);
+                int buttonFontSize = 16;
+                Font buttonFont = new Font("TimesRoman", Font.PLAIN, buttonFontSize);
+                int paddingX = 10; // padding between button and text
+                g.setFont(buttonFont);
 
-            g.setColor(CustomColors.emerald300);
-            int buttonFontSize = 16;
-            g.setFont(new Font("TimesRoman", Font.PLAIN, 16));
-            int buttonTextY = buttonY + buttonHeight / 2 + buttonFontSize / 2 - 4;
-            g.drawString(this.buttonText, GamePanel.W / 2 - 40, buttonTextY);
+                FontMetrics buttonMetrics = g.getFontMetrics(buttonFont);
+                int buttonTextWidth = buttonMetrics.stringWidth(buttonText);
+                int buttonTextY = buttonY + buttonHeight / 2 + buttonFontSize / 2 - 4;
+                int buttonWidth = buttonTextWidth + 2 * paddingX;
+
+                Graphics2D graphics2 = (Graphics2D) g;
+                int borderRadius = 10; // radius of rounded corners of the button
+                RoundRectangle2D roundedRectangle = new RoundRectangle2D.Float(GamePanel.W / 2 - buttonWidth / 2,
+                        buttonY,
+                        buttonWidth, buttonHeight, borderRadius, borderRadius);
+                graphics2.draw(roundedRectangle);
+                g.drawString(this.buttonText, GamePanel.W / 2 - buttonTextWidth / 2, buttonTextY);
+
+                // pseudobutton 2
+                String b2Text = "Challenge Mode"; // button 2 text
+                int period = 2000; // We want the animation to repeat itself every 2000 milliseconds.
+                long t = System.currentTimeMillis() % period / 2; // x goes from 0 to 1000
+                int b2FontSize = Math.abs(500 - (int) t) / 100 + 16; // font size of button 2 text
+                Font b2Font = new Font("TimesRoman", Font.PLAIN, b2FontSize); // button 2 font
+                g.setFont(b2Font);
+                FontMetrics b2Metrics = g.getFontMetrics(b2Font); // button 2 text metrics
+                int b2Width = b2Metrics.stringWidth(b2Text); // button 2 text width
+                int button2Y = buttonY + buttonHeight + 40;
+                g.drawString(b2Text, GamePanel.W / 2 - b2Width / 2, button2Y);
+
+                b2IsPressed = (x, y) -> {
+                    // arguments are x and y coordinates of the mouse
+                    // returns true if the mouse is in the button
+                    return Math.abs(x - GamePanel.W / 2) < b2Width / 2 && Math.abs(y - button2Y) < buttonHeight / 2;
+                };
+            }
         }
     }
 
-    public void mousePressed(MouseEvent e, VoidFunction resetScores) {
+    public void mousePressed(MouseEvent e, VoidFunction startNormalMode, VoidFunction startChallenge) {
         if (isVisible) {
-            // check if the mouse is in the button when pressed
-            if (e.getX() > GamePanel.W / 2 - 50 && e.getX() < GamePanel.W / 2 + 50
-                    && e.getY() > buttonY && e.getY() < buttonY + 50) {
-                resetScores.run();
-                ball.start();
-                hide();
+            if (isInstructions) {
+                if (instructions.isClicked(e.getX(), e.getY())) {
+                    // Start challenge mode.
+                    startChallenge.run();
+                    ball.start();
+                    hide();
+                }
+            } else {
+                // check if the mouse is in the button when pressed
+                if (e.getX() > GamePanel.W / 2 - 50 && e.getX() < GamePanel.W / 2 + 50
+                        && e.getY() > buttonY && e.getY() < buttonY + 50) {
+                    startNormalMode.run();
+                    ball.start();
+                    hide();
+                }
+                if (b2IsPressed.test(e.getX(), e.getY())) {
+                    // Open instructions screen
+                    isInstructions = true;
+                }
             }
         }
     }
