@@ -1,3 +1,4 @@
+
 /* Paddle class defines behaviours for both the computer- and player-controlled paddles.  
 
 child of Rectangle because that makes it easy to draw and check for collision
@@ -12,13 +13,12 @@ public class Paddle extends Rectangle {
     public static final int W = 15; // width of paddle
     public static final int H = 75; // height of paddle
 
-    // constructor creates ball at given location with given dimensions
     public Paddle(int x, int y) {
         super(x, y, W, H);
     }
 
     // called from GamePanel when any keyboard input is detected
-    // updates the direction of the ball based on user input
+    // updates the direction of the paddle based on user input
     public void keyPressed(KeyEvent e) {
 
         if (e.getKeyCode() == KeyEvent.VK_UP) {
@@ -32,8 +32,8 @@ public class Paddle extends Rectangle {
         }
     }
 
-    // called from GamePanel when any key is released (no longer being pressed down)
-    // Makes the ball stop moving in that direction
+    // called from GamePanel when any key is released
+    // Makes the paddle stop moving in that direction
     public void keyReleased(KeyEvent e) {
 
         if (e.getKeyCode() == KeyEvent.VK_UP) {
@@ -53,7 +53,7 @@ public class Paddle extends Rectangle {
     }
 
     // called frequently from both Paddle class and GamePanel class
-    // updates the current location of the ball
+    // updates the current location of the paddle
     public void move() {
         y += yVelocity;
         // if the paddle is going off the screen, then move it back to the edge
@@ -66,10 +66,9 @@ public class Paddle extends Rectangle {
     }
 
     // called frequently from the GamePanel class
-    // draws the current location of the ball to the screen
+    // draws the current location of the paddle to the screen
     public void draw(Graphics g) {
-        Color emerald600 = new Color(5, 150, 105);
-        g.setColor(emerald600);
+        g.setColor(CustomColors.emerald600);
         g.fillRect(x, y, width, height);
     }
 

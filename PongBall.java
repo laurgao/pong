@@ -1,4 +1,6 @@
-/* PongBall class defines behaviours for the pong ball  
+
+/*
+PongBall class defines behaviours for the pong ball  
 
 child of Rectangle because that makes it easy to draw and check for collision
 */
@@ -15,14 +17,15 @@ public class PongBall extends Rectangle {
 
     // We have xDouble and yDouble variables because we need to keep track of
     // fractional movements,
-    // because sometimes velocity defined by `cos(theta) * speed` or `sin(theta) *
+    // because sometimes, velocity defined by `cos(theta) * speed` or `sin(theta) *
     // speed` will be less than 1.
     private double xDouble;
     private double yDouble;
 
     boolean isMoving;
 
-    // constructor creates ball at given location with given dimensions
+    // constructor creates ball at a location given by parameters with set
+    // dimensions
     public PongBall(int x, int y) {
         super(x, y, D, D);
         // Generate a random angle from pi/2 to 3pi/2 (so the ball always starts by
@@ -33,8 +36,9 @@ public class PongBall extends Rectangle {
         isMoving = false;
     }
 
+    // reset the ball to the center of the screen and stops moving.
+    // called from GamePanel to start a new round.
     public void reset() {
-        // reset the ball to the center of the screen
         isMoving = false;
         x = GamePanel.W / 2;
         y = GamePanel.W / 2;
@@ -43,11 +47,12 @@ public class PongBall extends Rectangle {
         theta = Math.random() * Math.PI + Math.PI / 2;
     }
 
+    // called from GamePanel to start a new round.
     public void start() {
         isMoving = true;
     }
 
-    // called frequently from both PlayerBall class and GamePanel class
+    // called frequently GamePanel
     // updates the current location of the ball
     public void move() {
         if (isMoving) {
@@ -62,10 +67,7 @@ public class PongBall extends Rectangle {
     // called frequently from the GamePanel class
     // draws the current location of the ball to the screen
     public void draw(Graphics g) {
-        Color emerald300 = new Color(110, 231, 183);
-        g.setColor(emerald300);
+        g.setColor(CustomColors.emerald300);
         g.fillOval(x, y, D, D);
-        g.drawString("" + theta, 100, 100);
     }
-
 }

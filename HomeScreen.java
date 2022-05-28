@@ -1,3 +1,4 @@
+
 /* HomeScreen class functions like a main menu.
 It displays big text like a title screen as well as a button to start the game.
 */
@@ -47,7 +48,7 @@ public class HomeScreen {
     }
 
     // called frequently from the GamePanel class
-    // draws the current location of the ball to the screen
+    // draws the current home screen content to the screen if it is visible
     public void draw(Graphics g) {
         if (isVisible) {
             if (isInstructions) {

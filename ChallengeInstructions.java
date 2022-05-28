@@ -8,9 +8,9 @@ public class ChallengeInstructions {
     int buttonHeight;
     int buttonY;
 
+    // Helper method to draw a string with word wrapping.
+    // Returns the y position of the bottom of the last line.
     private int drawStringWrap(Graphics g, String str, FontMetrics metrics, int initialY) {
-        // Helper function to draw a string with word wrapping.
-        // Returns final y value.
         final double lineHeightFactor = 1.2;
         final int marginX = 40;
         String[] words = str.split(" ");

@@ -1,3 +1,4 @@
+
 /* GamePanel class acts as the main "game loop" - continuously runs the game and calls whatever needs to be called
 
 Child of JPanel because JPanel contains methods for drawing to the screen
@@ -44,12 +45,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         // create a computer-controlled paddle, set start location to middle of screen
         // right side
         computerPaddle = new Paddle(W - Paddle.W, H / 2 - Paddle.H / 2);
-        computerPaddle.setYVelocity(computerPaddle.SPEED);
 
         // add the MousePressed method from the MouseAdapter - by doing this we can
-        // listen for mouse input. We do this differently from the KeyListener because
-        // MouseAdapter has SEVEN mandatory methods - we only need one of them, and we
-        // don't want to make 6 empty methods
+        // listen for mouse input.
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 screen.mousePressed(e, () -> {
@@ -81,14 +79,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         gameThread.start();
     }
 
-    // paint is a method in java.awt library that we are overriding. It is a special
-    // method - it is called automatically in the background in order to update what
-    // appears in the window. You NEVER call paint() yourself
+    // paint is a method in java.awt library that we are overriding.
+    // It is called automatically in the background in order to update what
+    // appears in the window.
     public void paint(Graphics g) {
-        // we are using "double buffering here" - if we draw images directly onto the
-        // screen, it takes time and the human eye can actually notice flashes of lag as
-        // each pixel on the screen is drawn one at a time. Instead, we are going to
-        // draw images OFF the screen, then simply move the image on screen as needed.
+        // use double buffering - draw images OFF the screen, then move the image on
+        // screen
         image = createImage(W, H); // draw off screen
         graphics = image.getGraphics();
         draw(graphics);// update the positions of everything on the screen
@@ -112,15 +108,15 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         ball.draw(g);
         playerPaddle.draw(g);
         computerPaddle.draw(g);
-        screen.draw(g); // draw the screen last so it is on top of everything else
+        screen.draw(g); // draw the screen after ball and paddles so it is on top of them
         drawScore(g);
         drawInstructions(g);
     }
 
     private void drawScore(Graphics g) {
         if (screen.isInstructions || (screen.isVisible && mode == "challenge"))
-            return; // Do not display score if is instructions or if we're on the challenge mode
-                    // winning screen.
+            return; // Do not display score if is displaying instructions or if we're on the
+                    // challenge mode winning screen.
         if (screen.isVisible)
             g.setColor(CustomColors.emerald900);
         else
@@ -133,7 +129,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         int marginTop = 80; // distance from top of window
 
         if (mode == "normal") {
-            // Display the player's and computer's scores up to 5
+            // Display the player's and computer's scores
             // This score represents how many times the opposing player has missed the ball.
 
             // Do some math to center the scores in their respective halves of the screen
@@ -150,7 +146,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             g.drawString(pT, pX, marginTop);
             g.drawString(cT, cX, marginTop);
         } else {
-            // In challenge mode, display the time elapsed in minutes and seconds
+            // In challenge mode, display the time elapsed as the score.
             String elapsedTime = getElapsedTime();
             int textWidth = metrics.stringWidth(elapsedTime);
             int textX = W / 2 - textWidth / 2;
@@ -164,7 +160,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         // Display iff screen is showing challenge instructions or if on first sleep
         // when the game starts.
         if (screen.isInstructions
-                || isSleeping && (playerScore == 0 && computerScore == 0 || getElapsedTime() == "0:00")) {
+                || isSleeping && (playerScore == 0 && computerScore == 0 || getElapsedTime() == "00:00")) {
             final int marginBottom = 20; // distance from the bottom of screen
             g.setColor(screen.isVisible ? CustomColors.emerald600 : CustomColors.emerald400);
             Font paragraphFont = new Font("Arial", Font.PLAIN, 14);
@@ -177,6 +173,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
 
+    // Returns time passed since the start of the challenge game in the format
+    // "mm:ss"
     private String getElapsedTime() {
         long elapsedMs = System.currentTimeMillis() - startTime; // time elapsed in milliseconds
         long elapsedS = elapsedMs / 1000; // time elapsed in seconds
@@ -184,18 +182,17 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         long elapsedSecs = elapsedS % 60; // time elapsed in seconds minus full minutes
 
         String secsString = elapsedSecs < 10 ? "0" + Long.toString(elapsedSecs) : Long.toString(elapsedSecs);
-        String elapsedTime = Long.toString(elapsedMins) + ":" + secsString;
+        String minsString = elapsedMins < 10 ? "0" + Long.toString(elapsedMins) : Long.toString(elapsedMins);
 
-        return elapsedTime;
+        return minsString + ":" + secsString;
     }
 
+    // This method controlls the "algorithm" for the computer-controlled paddle.
+    // move the computer paddle towards the ball if ball is moving towards the
+    // computer paddle and the ball is on the right side of the screen.
     private void updateComputerPaddleVelocity() {
-        // This method controlls the "algorithm" for the computer-controlled paddle.
-        // move the computer paddle towards the ball if ball is moving towards the
-        // computer paddle and the ball is on the right side of the screen.
-        if (Math.cos(ball.theta) > 0 && ball.x > W / 2) {
-            // Only change direction if ball is sufficiently far away from paddle.
 
+        if (Math.cos(ball.theta) > 0 && ball.x > W / 2) {
             final int error = mode == "normal" ? 20 : 0; // the ball will be this many pixels away from the paddle
                                                          // before it changes direction
             // if greater than 0, the algorithm will sometimes miss the ball, which gives
@@ -203,6 +200,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
             int paddleCy = (computerPaddle.y + Paddle.H / 2); // center y coordinate of paddle
             int ballCy = (ball.y + PongBall.D / 2); // center y coordinate of ball
+
+            // Only change direction if ball is sufficiently far away from paddle.
             if (Math.abs(paddleCy - ballCy) > (Paddle.H / 2 + error)) {
                 // If paddle is above ball, move paddle down, and vice versa.
                 if (paddleCy < ballCy) {
@@ -219,6 +218,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
 
     // Check for collision and update theta accordingly.
+    // This method is continually called in the move method because positions are
+    // updated according to collisions.
     private void checkCollision() {
         final double randomIncrement = 0.2; // add a little bit of randomness to the angle each time ball bounces.
         // Does ball hit paddle?
@@ -226,7 +227,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 && ball.x <= playerPaddle.x + Paddle.W
                 && ball.y + PongBall.D >= playerPaddle.y && ball.y <= playerPaddle.y + Paddle.H) {
 
-            // reflect theta if ball is currently moving left
+            // reflect theta across the y axis if ball is currently moving left
             if (Math.cos(ball.theta) < 0) {
                 ball.theta = Math.PI - ball.theta;
                 ball.theta += Math.random() * randomIncrement * 2 - randomIncrement;
@@ -237,7 +238,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 && ball.x <= computerPaddle.x + Paddle.W
                 && ball.y + PongBall.D >= computerPaddle.y
                 && ball.y <= computerPaddle.y + Paddle.H) {
-            // reflect theta if ball is currently moving right
+            // reflect theta across the y axis if ball is currently moving right
             if (Math.cos(ball.theta) > 0) {
                 ball.theta = Math.PI - ball.theta;
                 ball.theta += Math.random() * randomIncrement * 2 - randomIncrement;
@@ -246,19 +247,22 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         } else if (ball.y <= 0 && Math.sin(ball.theta) < 0
                 || ball.y >= GamePanel.H - PongBall.D && Math.sin(ball.theta) > 0) {
             // If ball hits top of screen while moving up or bottom while moving down,
-            // do a bounce
+            // do a bounce (reflect theta across the x axis)
             ball.theta *= -1;
             ball.theta += Math.random() * randomIncrement * 2 - randomIncrement;
 
         } else if (ball.x <= 0) {
-            // If ball hits left or right of screen (and not paddle), the game loses.
-            // computer wins
+            // If ball hits the left of the screen (and not paddle), the player loses. the
+            // computer wins.
             if (mode == "normal") {
                 computerScore++;
                 ball.reset();
                 if (computerScore >= WINNING_SCORE)
+                    // If computer has accumulated enough score to win the game, the game is over.
+                    // Show the start menu.
                     screen.setText("Computer wins!", "Play again?");
                 else {
+                    // Else, start a new round.
                     // Wait 1 second with the ball in the middle of the screen before the ball
                     // starts moving.
                     sleep();
@@ -274,6 +278,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 }
             }
         } else if (ball.x >= GamePanel.W - PongBall.D) {
+            // If ball hits the right of the screen (and not computerPaddle), the player
+            // wins.
             playerScore++;
             ball.reset();
             if (playerScore >= WINNING_SCORE)
@@ -293,9 +299,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             ball.theta += 2 * Math.PI;
         }
 
-        // if theta is too close to pi/2 or -pi/2, then the ball will bounce from top
+        // If theta is too close to pi/2 or -pi/2, then the ball will bounce from top
         // wall to bottom wall back and forth for too long, which makes the game slow
-        // and boring for the player. thus, we will make it a little
+        // and boring for the player. Thus, we will adjust it a little
         // farther away from pi/2 and -pi/2.
         double threshold = 0.5;
         if (Math.abs(ball.theta - Math.PI / 2) < threshold) {
@@ -313,8 +319,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     // call the move methods in other classes to update positions
     // this method is constantly called from run(). By doing this, movements appear
-    // fluid and natural. If we take this out the movements appear sluggish and
-    // laggy
+    // fluid and natural.
     public void move() {
         ball.move();
         playerPaddle.move();
@@ -324,13 +329,15 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         adjustTheta();
     }
 
+    // Calling this method sleeps the game for 1 second.
+    // Sleeping = no movement of any element on the screen (the move method is not
+    // continually called when sleeping).
     public void sleep() {
-        // Sleeps for 1 second
         isSleeping = true;
     }
 
     // run() method is what makes the game continue running without end. It calls
-    // other methods to move objects, check for collision, and update the screen
+    // other methods to move objects and update the screen
     public void run() {
         // the CPU runs our game code too quickly - we need to slow it down! The
         // following lines of code "force" the computer to get stuck in a loop for short
