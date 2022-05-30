@@ -1,0 +1,9 @@
+javac ChallengeInstructions.java
+javac CustomColors.java
+javac GameFrame.java
+javac GamePanel.java
+javac HomeScreen.java
+javac Main.java
+javac Paddle.java
+javac PongBall.java
+java Main

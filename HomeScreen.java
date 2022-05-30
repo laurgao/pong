@@ -37,8 +37,8 @@ public class HomeScreen {
         isVisible = true;
     }
 
+    // Overload variant of `setText` that makes subtitle empty.
     public void setText(String titleText, String buttonText) {
-        // Overload variant of `setText` that makes subtitle empty.
         setText(titleText, buttonText, "");
     }
 
@@ -61,7 +61,7 @@ public class HomeScreen {
 
                 // Draw title
                 boolean subtitleExists = subtitle.length() > 0;
-                Font subtitleFont = new Font("TimesRoman", Font.ITALIC, 16);
+                Font subtitleFont = new Font("Arial", Font.ITALIC, 16);
                 FontMetrics subMetrics = g.getFontMetrics(subtitleFont);
                 int subtitleHeight = subtitleExists ? subMetrics.getHeight() : 0;
 
@@ -70,7 +70,7 @@ public class HomeScreen {
                 int widthPerChar = anticipatedTitleWidth / numChars;
                 // Get the FontMetrics so we can determine the width of the text so we can
                 // center it on screen.
-                Font titleFont = new Font("TimesRoman", Font.PLAIN, (widthPerChar + 20));
+                Font titleFont = new Font("Arial", Font.PLAIN, (widthPerChar + 20));
                 g.setFont(titleFont);
                 FontMetrics titleMetrics = g.getFontMetrics(titleFont);
                 int titleWidth = titleMetrics.stringWidth(title);
@@ -98,7 +98,7 @@ public class HomeScreen {
 
                 g.setColor(CustomColors.emerald300);
                 int buttonFontSize = 16;
-                Font buttonFont = new Font("TimesRoman", Font.PLAIN, buttonFontSize);
+                Font buttonFont = new Font("Arial", Font.PLAIN, buttonFontSize);
                 int paddingX = 10; // padding between button and text
                 g.setFont(buttonFont);
 
@@ -120,7 +120,7 @@ public class HomeScreen {
                 int period = 2000; // We want the animation to repeat itself every 2000 milliseconds.
                 long t = System.currentTimeMillis() % period / 2; // x goes from 0 to 1000
                 int b2FontSize = Math.abs(500 - (int) t) / 100 + 16; // font size of button 2 text
-                Font b2Font = new Font("TimesRoman", Font.PLAIN, b2FontSize); // button 2 font
+                Font b2Font = new Font("Arial", Font.PLAIN, b2FontSize); // button 2 font
                 g.setFont(b2Font);
                 FontMetrics b2Metrics = g.getFontMetrics(b2Font); // button 2 text metrics
                 int b2Width = b2Metrics.stringWidth(b2Text); // button 2 text width
@@ -152,8 +152,7 @@ public class HomeScreen {
                     hide();
                     startNormalMode.run();
                     ball.start();
-                }
-                if (b2IsPressed.test(e.getX(), e.getY())) {
+                } else if (b2IsPressed.test(e.getX(), e.getY())) {
                     // Open instructions screen
                     isInstructions = true;
                 }
@@ -163,9 +162,9 @@ public class HomeScreen {
 
 }
 
+// Dummy interface for typing of functions with no inputs and no outputs,
+// so we can pass callback functions as arguments to methods.
 @FunctionalInterface
 interface VoidFunction {
-    // Dummy interface for typing of functions with no inputs and no outputs,
-    // so we can pass callback functions as arguments to methods.
     void run();
 }

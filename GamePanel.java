@@ -192,7 +192,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     // computer paddle and the ball is on the right side of the screen.
     private void updateComputerPaddleVelocity() {
 
-        if (Math.cos(ball.theta) > 0 && ball.x > W / 2) {
+        if (Math.cos(ball.theta) > 0 && ball.x > (mode == "normal" ? W / 2 : W / 3)) {
             final int error = mode == "normal" ? 20 : 0; // the ball will be this many pixels away from the paddle
                                                          // before it changes direction
             // if greater than 0, the algorithm will sometimes miss the ball, which gives
@@ -282,7 +282,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             // wins.
             playerScore++;
             ball.reset();
-            if (playerScore >= WINNING_SCORE)
+            if (mode == "normal" && playerScore >= WINNING_SCORE)
                 screen.setText("Player wins!", "Play again?");
             else {
                 sleep();

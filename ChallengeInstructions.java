@@ -50,7 +50,7 @@ public class ChallengeInstructions {
                 y + paragraphMargin);
 
         // Add button
-        String buttonText = "Start game!";
+        String buttonText = "Start Game!";
         int buttonTextWidth = metrics.stringWidth(buttonText);
         int padding = 10;
         buttonHeight = metrics.getHeight() + padding * 2;
