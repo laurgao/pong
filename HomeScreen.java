@@ -30,6 +30,8 @@ public class HomeScreen {
         subtitle = "";
     }
 
+    // Changes the text displayed on the home screen to the input
+    // Displays the home screen automatically when text changes
     public void setText(String titleText, String buttonText, String subtitle) {
         this.title = titleText;
         this.buttonText = buttonText;
